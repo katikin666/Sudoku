@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper &amp; Ink Sudoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-well: #efe8d8;
+    --ink: #2a231d;
+    --ink-soft: #6b5f52;
+    --hairline: #d9cfbc;
+    --seal: #b23a2e;
+    --seal-tint: rgba(178, 58, 46, 0.10);
+    --seal-tint-strong: rgba(178, 58, 46, 0.20);
+    --success: #5b7355;
+    --focus-ring: rgba(178, 58, 46, 0.45);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1815;
+      --paper-well: #241f1a;
+      --ink: #ede6d6;
+      --ink-soft: #b5a996;
+      --hairline: #3a332b;
+      --seal: #d4634f;
+      --seal-tint: rgba(212, 99, 79, 0.14);
+      --seal-tint-strong: rgba(212, 99, 79, 0.26);
+      --success: #8fae86;
+      --focus-ring: rgba(212, 99, 79, 0.55);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1c1815;
+    --paper-well: #241f1a;
+    --ink: #ede6d6;
+    --ink-soft: #b5a996;
+    --hairline: #3a332b;
+    --seal: #d4634f;
+    --seal-tint: rgba(212, 99, 79, 0.14);
+    --seal-tint-strong: rgba(212, 99, 79, 0.26);
+    --success: #8fae86;
+    --focus-ring: rgba(212, 99, 79, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .page {
+    width: min(420px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .lockup .title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .seal-mark {
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 2px solid var(--seal);
+    border-radius: 3px;
+    position: relative;
+    transform: rotate(-6deg);
+    flex-shrink: 0;
+  }
+  .seal-mark::after {
+    content: "";
+    position: absolute;
+    inset: 32%;
+    background: var(--seal);
+    border-radius: 50%;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(1.8rem, 5vw, 2.3rem);
+    letter-spacing: 0.06em;
+    text-wrap: balance;
+  }
+
+  .sub {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .rule {
+    width: 100%;
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  .status {
+    min-height: 1.2em;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .status.win { color: var(--success); font-weight: 500; }
+  .status.error { color: var(--seal); font-weight: 500; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    width: min(378px, 92vw);
+    aspect-ratio: 1;
+    background: var(--hairline);
+    gap: 1px;
+    border: 2px solid var(--ink);
+  }
+
+  .cell {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-family: "Shippori Mincho", serif;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.05rem, 4vw, 1.3rem);
+    color: var(--seal);
+    border: none;
+    outline: none;
+    background: var(--paper);
+    padding: 0;
+    transition: background-color 0.15s ease;
+  }
+  .cell.given {
+    background: var(--paper-well);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .cell.peer { background: var(--paper-well); }
+  .cell.selected { background: var(--seal-tint); }
+  .cell.given.selected { background: var(--seal-tint); }
+  .cell.error { background: var(--seal-tint-strong); color: var(--seal); }
+
+  .cell:nth-child(3n) { border-right: 2px solid var(--ink); }
+  .cell:nth-child(9n) { border-right: none; }
+  .cell:nth-child(n+19):nth-child(-n+27),
+  .cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .cell:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  button {
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    padding: 9px 18px;
+    border-radius: 2px;
+    border: 1px solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  button:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cell, button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="lockup">
+    <div class="title-row">
+      <span class="seal-mark" aria-hidden="true"></span>
+      <h1>Sudoku</h1>
+    </div>
+    <p class="sub">nine digits, one square at a time</p>
+  </div>
+  <div class="rule"></div>
+  <div id="status" class="status" role="status"></div>
+  <div id="board" class="board"></div>
+  <div class="controls">
+    <button id="newGameBtn">New Game</button>
+    <button id="checkBtn">Check</button>
+    <button id="solveBtn">Solve</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+</div>
+
+<script>
+// A few starting puzzles (0 = empty). Each is a valid, solvable Sudoku.
+const PUZZLES = [
+  [
+    [5,3,0, 0,7,0, 0,0,0],
+    [6,0,0, 1,9,5, 0,0,0],
+    [0,9,8, 0,0,0, 0,6,0],
+
+    [8,0,0, 0,6,0, 0,0,3],
+    [4,0,0, 8,0,3, 0,0,1],
+    [7,0,0, 0,2,0, 0,0,6],
+
+    [0,6,0, 0,0,0, 2,8,0],
+    [0,0,0, 4,1,9, 0,0,5],
+    [0,0,0, 0,8,0, 0,7,9]
+  ],
+  [
+    [0,0,0, 2,6,0, 7,0,1],
+    [6,8,0, 0,7,0, 0,9,0],
+    [1,9,0, 0,0,4, 5,0,0],
+
+    [8,2,0, 1,0,0, 0,4,0],
+    [0,0,4, 6,0,2, 9,0,0],
+    [0,5,0, 0,0,3, 0,2,8],
+
+    [0,0,9, 3,0,0, 0,7,4],
+    [0,4,0, 0,5,0, 0,3,6],
+    [7,0,3, 0,1,8, 0,0,0]
+  ]
+];
+
+let currentPuzzle = null;
+let board = [];      // current values
+let givens = [];      // boolean mask of pre-filled cells
+let solution = [];    // solved board
+
+function cloneBoard(b) { return b.map(row => row.slice()); }
+
+// --- Sudoku solver (backtracking) ---
+function solveSudoku(grid) {
+  const g = cloneBoard(grid);
+  if (solveHelper(g)) return g;
+  return null;
+}
+
+function solveHelper(g) {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (g[r][c] === 0) {
+        for (let num = 1; num <= 9; num++) {
+          if (isValidPlacement(g, r, c, num)) {
+            g[r][c] = num;
+            if (solveHelper(g)) return true;
+            g[r][c] = 0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function isValidPlacement(g, row, col, num) {
+  for (let i = 0; i < 9; i++) {
+    if (g[row][i] === num || g[i][col] === num) return false;
+  }
+  const br = Math.floor(row / 3) * 3;
+  const bc = Math.floor(col / 3) * 3;
+  for (let r = br; r < br + 3; r++) {
+    for (let c = bc; c < bc + 3; c++) {
+      if (g[r][c] === num) return false;
+    }
+  }
+  return true;
+}
+
+// --- Game setup ---
+function startNewGame() {
+  currentPuzzle = PUZZLES[Math.floor(Math.random() * PUZZLES.length)];
+  board = cloneBoard(currentPuzzle);
+  givens = currentPuzzle.map(row => row.map(v => v !== 0));
+  solution = solveSudoku(currentPuzzle);
+  setStatus('', '');
+  renderBoard();
+}
+
+function resetGame() {
+  board = cloneBoard(currentPuzzle);
+  setStatus('', '');
+  renderBoard();
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const input = document.createElement('input');
+      input.className = 'cell';
+      input.maxLength = 1;
+      input.inputMode = 'numeric';
+      input.autocomplete = 'off';
+      input.dataset.row = r;
+      input.dataset.col = c;
+
+      const val = board[r][c];
+      if (val !== 0) input.value = val;
+
+      if (givens[r][c]) {
+        input.classList.add('given');
+        input.disabled = true;
+      } else {
+        if (val !== 0) input.classList.add('entered');
+        input.addEventListener('input', onCellInput);
+      }
+      boardEl.appendChild(input);
+    }
+  }
+}
+
+function onCellInput(e) {
+  const el = e.target;
+  let v = el.value.replace(/[^1-9]/g, '');
+  el.value = v.slice(-1);
+  const r = parseInt(el.dataset.row);
+  const c = parseInt(el.dataset.col);
+  board[r][c] = el.value ? parseInt(el.value) : 0;
+  el.classList.remove('error');
+  el.classList.toggle('entered', el.value !== '');
+  setStatus('', '');
+}
+
+function setStatus(text, cls) {
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+function checkBoard() {
+  const cells = document.querySelectorAll('.cell');
+  cells.forEach(c => c.classList.remove('error'));
+
+  let hasError = false;
+  let isFull = true;
+
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const val = board[r][c];
+      if (val === 0) { isFull = false; continue; }
+      // temporarily remove value to check against rest of board
+      const g = cloneBoard(board);
+      g[r][c] = 0;
+      if (!isValidPlacement(g, r, c, val)) {
+        hasError = true;
+        const cellEl = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+        if (cellEl) cellEl.classList.add('error');
+      }
+    }
+  }
+
+  if (hasError) {
+    setStatus('There are conflicts — check the highlighted cells.', 'error');
+  } else if (!isFull) {
+    setStatus('Looking good so far — keep going.', '');
+  } else {
+    setStatus('Solved. Well played.', 'win');
+  }
+}
+
+function revealSolution() {
+  board = cloneBoard(solution);
+  renderBoard();
+  setStatus('Here is the solution.', '');
+}
+
+// --- Row / column / box highlighting on focus ---
+function highlightPeers(row, col) {
+  const br = Math.floor(row / 3) * 3;
+  const bc = Math.floor(col / 3) * 3;
+  document.querySelectorAll('.cell').forEach(cell => {
+    const r = parseInt(cell.dataset.row);
+    const c = parseInt(cell.dataset.col);
+    cell.classList.remove('selected', 'peer');
+    if (r === row && c === col) {
+      cell.classList.add('selected');
+    } else if (r === row || c === col || (r >= br && r < br + 3 && c >= bc && c < bc + 3)) {
+      cell.classList.add('peer');
+    }
+  });
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('selected', 'peer'));
+}
+
+const boardEl = document.getElementById('board');
+boardEl.addEventListener('focusin', (e) => {
+  if (e.target.classList.contains('cell')) {
+    highlightPeers(parseInt(e.target.dataset.row), parseInt(e.target.dataset.col));
+  }
+});
+boardEl.addEventListener('focusout', () => {
+  requestAnimationFrame(() => {
+    if (!boardEl.contains(document.activeElement)) clearHighlights();
+  });
+});
+
+document.getElementById('newGameBtn').addEventListener('click', startNewGame);
+document.getElementById('checkBtn').addEventListener('click', checkBoard);
+document.getElementById('solveBtn').addEventListener('click', revealSolution);
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+startNewGame();
+</script>
+
+</body>
+</html>
