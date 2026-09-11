@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katja's AI Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-well: #efe8d8;
+    --ink: #2a231d;
+    --ink-soft: #6b5f52;
+    --hairline: #d9cfbc;
+    --seal: #b23a2e;
+    --seal-tint: rgba(178, 58, 46, 0.10);
+    --focus-ring: rgba(178, 58, 46, 0.45);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1815;
+      --paper-well: #241f1a;
+      --ink: #ede6d6;
+      --ink-soft: #b5a996;
+      --hairline: #3a332b;
+      --seal: #d4634f;
+      --seal-tint: rgba(212, 99, 79, 0.14);
+      --focus-ring: rgba(212, 99, 79, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1c1815;
+    --paper-well: #241f1a;
+    --ink: #ede6d6;
+    --ink-soft: #b5a996;
+    --hairline: #3a332b;
+    --seal: #d4634f;
+    --seal-tint: rgba(212, 99, 79, 0.14);
+    --focus-ring: rgba(212, 99, 79, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+  }
+
+  .page {
+    width: min(640px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .seal-mark {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--seal);
+    border-radius: 3px;
+    position: relative;
+    transform: rotate(-6deg);
+    flex-shrink: 0;
+  }
+  .seal-mark::after {
+    content: "";
+    position: absolute;
+    inset: 32%;
+    background: var(--seal);
+    border-radius: 50%;
+  }
+  h1 {
+    margin: 0;
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(1.9rem, 5.5vw, 2.6rem);
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .tagline {
+    margin: 0;
+    max-width: 34ch;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .rule { width: 100%; height: 1px; background: var(--hairline); }
+
+  .index-label {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .cards {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 20px;
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    text-decoration: none;
+    color: inherit;
+    background: var(--paper-well);
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .card:hover {
+    background: var(--seal-tint);
+    border-color: var(--seal);
+    transform: translateX(2px);
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .card.disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .card-index {
+    font-family: "Shippori Mincho", serif;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    min-width: 2.4em;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .card-title {
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+  .card-desc { font-size: 0.85rem; color: var(--ink-soft); }
+  .card-arrow {
+    font-size: 1.2rem;
+    color: var(--seal);
+    flex-shrink: 0;
+  }
+  .card.disabled .card-arrow { color: var(--ink-soft); }
+
+  .status-pill {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    padding: 2px 9px;
+    flex-shrink: 0;
+  }
+
+  footer {
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="lockup">
+    <div class="title-row">
+      <span class="seal-mark" aria-hidden="true"></span>
+      <h1>Katja's AI Playground</h1>
+    </div>
+    <p class="tagline">Here I can experiment and play to learn.</p>
+  </div>
+
+  <div class="rule"></div>
+
+  <div style="width:100%; display:flex; flex-direction:column; gap:14px;">
+    <span class="index-label">Index</span>
+    <div class="cards">
+      <a class="card" href="sudoku.html">
+        <span class="card-index">01</span>
+        <span class="card-body">
+          <span class="card-title">Sudoku</span>
+          <span class="card-desc">Nine digits, one square at a time.</span>
+        </span>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="card" href="crossword.html">
+        <span class="card-index">02</span>
+        <span class="card-body">
+          <span class="card-title">Crossword</span>
+          <span class="card-desc">Five words, one grid.</span>
+        </span>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <span class="card disabled">
+        <span class="card-index">03</span>
+        <span class="card-body">
+          <span class="card-title">Slider</span>
+          <span class="card-desc">A sliding tile puzzle, coming soon.</span>
+        </span>
+        <span class="status-pill">In progress</span>
+      </span>
+    </div>
+  </div>
+
+  <footer>More experiments arrive here as they're built.</footer>
+</div>
+
+</body>
+</html>
