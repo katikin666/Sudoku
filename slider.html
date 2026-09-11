@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>For Francois</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-well: #efe8d8;
+    --ink: #2a231d;
+    --ink-soft: #6b5f52;
+    --hairline: #d9cfbc;
+    --seal: #b23a2e;
+    --seal-tint: rgba(178, 58, 46, 0.10);
+    --success: #5b7355;
+    --focus-ring: rgba(178, 58, 46, 0.45);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1815;
+      --paper-well: #241f1a;
+      --ink: #ede6d6;
+      --ink-soft: #b5a996;
+      --hairline: #3a332b;
+      --seal: #d4634f;
+      --seal-tint: rgba(212, 99, 79, 0.14);
+      --success: #8fae86;
+      --focus-ring: rgba(212, 99, 79, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1c1815;
+    --paper-well: #241f1a;
+    --ink: #ede6d6;
+    --ink-soft: #b5a996;
+    --hairline: #3a332b;
+    --seal: #d4634f;
+    --seal-tint: rgba(212, 99, 79, 0.14);
+    --success: #8fae86;
+    --focus-ring: rgba(212, 99, 79, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .page {
+    width: min(380px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .lockup { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  .title-row { display: flex; align-items: center; gap: 10px; }
+  .seal-mark {
+    width: 1.7rem; height: 1.7rem;
+    border: 2px solid var(--seal);
+    border-radius: 3px;
+    position: relative;
+    transform: rotate(-6deg);
+    flex-shrink: 0;
+  }
+  .seal-mark::after {
+    content: "";
+    position: absolute; inset: 32%;
+    background: var(--seal);
+    border-radius: 50%;
+  }
+  h1 {
+    margin: 0;
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(1.8rem, 5vw, 2.3rem);
+    letter-spacing: 0.06em;
+    text-wrap: balance;
+  }
+  .sub {
+    margin: 0;
+    max-width: 30ch;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    text-align: center;
+  }
+  .rule { width: 100%; height: 1px; background: var(--hairline); }
+
+  .status { min-height: 1.2em; font-size: 0.9rem; color: var(--ink-soft); text-align: center; }
+  .status.win { color: var(--success); font-weight: 500; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    width: min(320px, 84vw);
+    aspect-ratio: 1;
+    background: var(--ink);
+    gap: 3px;
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+  }
+
+  .tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper-well);
+    color: var(--ink);
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(1.4rem, 6vw, 1.9rem);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+  .tile:hover { background: var(--seal-tint); }
+  .tile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+  .tile.blank { background: var(--paper); cursor: default; }
+  .tile.blank:hover { background: var(--paper); }
+
+  .moves { font-size: 0.8rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  button {
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    padding: 9px 18px;
+    border-radius: 2px;
+    border: 1px solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  button:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile, button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="lockup">
+    <div class="title-row">
+      <span class="seal-mark" aria-hidden="true"></span>
+      <h1>For Francois</h1>
+    </div>
+    <p class="sub">Slide the tiles until the words find their way home.</p>
+  </div>
+  <div class="rule"></div>
+  <div id="status" class="status" role="status"></div>
+  <div id="board" class="board"></div>
+  <div class="moves" id="moves">0 moves</div>
+  <div class="controls">
+    <button id="shuffleBtn">Shuffle</button>
+    <button id="solveBtn">Solve</button>
+  </div>
+</div>
+
+<script>
+// Solved layout: "FOREVER" + gap (blank) + "FRANCOIS", read row by row.
+const SOLVED_LETTERS = ["F","O","R","E","V","E","R",null,"F","R","A","N","C","O","I","S"];
+const SIZE = 4;
+const BLANK_HOME = SOLVED_LETTERS.indexOf(null);
+
+// Each tile has a fixed id (0..14) and a home index (its solved position).
+const TILE_HOMES = [];
+SOLVED_LETTERS.forEach((letter, idx) => { if (letter !== null) TILE_HOMES.push(idx); });
+// tileId -> letter
+const TILE_LETTER = TILE_HOMES.map(homeIdx => SOLVED_LETTERS[homeIdx]);
+
+let board = []; // board[i] = tileId or null (blank)
+let moveCount = 0;
+
+function solvedBoard() {
+  const b = new Array(16).fill(null);
+  TILE_HOMES.forEach((homeIdx, tileId) => { b[homeIdx] = tileId; });
+  return b;
+}
+
+function neighbors(idx) {
+  const r = Math.floor(idx / SIZE), c = idx % SIZE;
+  const list = [];
+  if (r > 0) list.push(idx - SIZE);
+  if (r < SIZE - 1) list.push(idx + SIZE);
+  if (c > 0) list.push(idx - 1);
+  if (c < SIZE - 1) list.push(idx + 1);
+  return list;
+}
+
+function shuffleBoard() {
+  board = solvedBoard();
+  let blankIdx = board.indexOf(null);
+  let lastIdx = -1;
+  for (let i = 0; i < 300; i++) {
+    const opts = neighbors(blankIdx).filter(n => n !== lastIdx);
+    const next = opts[Math.floor(Math.random() * opts.length)];
+    board[blankIdx] = board[next];
+    board[next] = null;
+    lastIdx = blankIdx;
+    blankIdx = next;
+  }
+  moveCount = 0;
+  setStatus("", "");
+  renderBoard();
+  updateMoves();
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById("board");
+  boardEl.innerHTML = "";
+  board.forEach((tileId, idx) => {
+    const cell = document.createElement("button");
+    cell.className = "tile";
+    if (tileId === null) {
+      cell.classList.add("blank");
+      cell.disabled = true;
+    } else {
+      cell.textContent = TILE_LETTER[tileId];
+      cell.addEventListener("click", () => attemptMove(idx));
+    }
+    boardEl.appendChild(cell);
+  });
+}
+
+function attemptMove(idx) {
+  const blankIdx = board.indexOf(null);
+  if (!neighbors(blankIdx).includes(idx)) return;
+  board[blankIdx] = board[idx];
+  board[idx] = null;
+  moveCount++;
+  updateMoves();
+  renderBoard();
+  checkWin();
+}
+
+function updateMoves() {
+  document.getElementById("moves").textContent = moveCount === 1 ? "1 move" : `${moveCount} moves`;
+}
+
+function setStatus(text, cls) {
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "status" + (cls ? " " + cls : "");
+}
+
+function checkWin() {
+  const matches = board.every((tileId, idx) => {
+    const letter = tileId === null ? null : TILE_LETTER[tileId];
+    return letter === SOLVED_LETTERS[idx];
+  });
+  if (matches) setStatus("Forever, always.", "win");
+}
+
+function revealSolution() {
+  board = solvedBoard();
+  renderBoard();
+  setStatus("There it is.", "win");
+}
+
+document.getElementById("shuffleBtn").addEventListener("click", shuffleBoard);
+document.getElementById("solveBtn").addEventListener("click", revealSolution);
+
+shuffleBoard();
+</script>
+
+</body>
+</html>
