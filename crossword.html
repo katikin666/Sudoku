@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper &amp; Ink Crossword</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f1e7;
+    --paper-well: #efe8d8;
+    --ink: #2a231d;
+    --ink-soft: #6b5f52;
+    --hairline: #d9cfbc;
+    --block: #2a231d;
+    --seal: #b23a2e;
+    --seal-tint: rgba(178, 58, 46, 0.10);
+    --seal-tint-strong: rgba(178, 58, 46, 0.20);
+    --success: #5b7355;
+    --focus-ring: rgba(178, 58, 46, 0.45);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1c1815;
+      --paper-well: #241f1a;
+      --ink: #ede6d6;
+      --ink-soft: #b5a996;
+      --hairline: #3a332b;
+      --block: #0f0d0b;
+      --seal: #d4634f;
+      --seal-tint: rgba(212, 99, 79, 0.14);
+      --seal-tint-strong: rgba(212, 99, 79, 0.26);
+      --success: #8fae86;
+      --focus-ring: rgba(212, 99, 79, 0.55);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1c1815;
+    --paper-well: #241f1a;
+    --ink: #ede6d6;
+    --ink-soft: #b5a996;
+    --hairline: #3a332b;
+    --block: #0f0d0b;
+    --seal: #d4634f;
+    --seal-tint: rgba(212, 99, 79, 0.14);
+    --seal-tint-strong: rgba(212, 99, 79, 0.26);
+    --success: #8fae86;
+    --focus-ring: rgba(212, 99, 79, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .page {
+    width: min(460px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .lockup .title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .seal-mark {
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 2px solid var(--seal);
+    border-radius: 3px;
+    position: relative;
+    transform: rotate(-6deg);
+    flex-shrink: 0;
+  }
+  .seal-mark::after {
+    content: "";
+    position: absolute;
+    inset: 32%;
+    background: var(--seal);
+    border-radius: 50%;
+  }
+  h1 {
+    margin: 0;
+    font-family: "Shippori Mincho", serif;
+    font-weight: 600;
+    font-size: clamp(1.8rem, 5vw, 2.3rem);
+    letter-spacing: 0.06em;
+    text-wrap: balance;
+  }
+  .sub {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .rule { width: 100%; height: 1px; background: var(--hairline); }
+
+  .status {
+    min-height: 1.2em;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .status.win { color: var(--success); font-weight: 500; }
+  .status.error { color: var(--seal); font-weight: 500; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    width: min(336px, 88vw);
+    aspect-ratio: 1;
+    background: var(--ink);
+    gap: 1px;
+    border: 2px solid var(--ink);
+  }
+  .square {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--paper);
+  }
+  .square.block { background: var(--block); }
+
+  .square input {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    text-transform: uppercase;
+    font-family: "Shippori Mincho", serif;
+    font-size: clamp(1rem, 3.6vw, 1.25rem);
+    color: var(--ink);
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0;
+    transition: background-color 0.15s ease;
+  }
+  .square input.error { color: var(--seal); background: var(--seal-tint-strong); }
+  .square input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+  .clue-number {
+    position: absolute;
+    top: 1px;
+    left: 3px;
+    font-size: 0.55rem;
+    color: var(--ink-soft);
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    pointer-events: none;
+  }
+
+  .clues {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+    font-size: 0.85rem;
+  }
+  .clues h2 {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .clue-group h3 {
+    font-family: "Shippori Mincho", serif;
+    font-size: 0.95rem;
+    margin: 0 0 6px;
+    letter-spacing: 0.04em;
+  }
+  .clue-group ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--ink-soft);
+  }
+  .clue-group li span.num {
+    color: var(--ink);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  button {
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    padding: 9px 18px;
+    border-radius: 2px;
+    border: 1px solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  button:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .square input, button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="lockup">
+    <div class="title-row">
+      <span class="seal-mark" aria-hidden="true"></span>
+      <h1>Crossword</h1>
+    </div>
+    <p class="sub">five words, one grid</p>
+  </div>
+  <div class="rule"></div>
+  <div id="status" class="status" role="status"></div>
+  <div id="grid" class="grid"></div>
+
+  <div class="clues">
+    <div class="clue-group">
+      <h3>Across</h3>
+      <ul id="acrossClues"></ul>
+    </div>
+    <div class="clue-group">
+      <h3>Down</h3>
+      <ul id="downClues"></ul>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="checkBtn">Check</button>
+    <button id="solveBtn">Solve</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+</div>
+
+<script>
+// # marks a block. Letters mark the solution.
+const SOLUTION = [
+  "...B...",
+  "..ALE..",
+  ".F.A...",
+  "PUZZLES",
+  ".N.I...",
+  "..INN..",
+  "...G...",
+].map(row => row.split("").map(ch => ch === "." ? null : ch));
+
+const ROWS = 7, COLS = 7;
+
+const ENTRIES = [
+  { num: 1, dir: "down",   row: 0, col: 3, len: 7, word: "BLAZING", clue: "Extremely hot or bright" },
+  { num: 2, dir: "across", row: 1, col: 2, len: 3, word: "ALE",     clue: "A malty pub drink" },
+  { num: 3, dir: "down",   row: 2, col: 1, len: 3, word: "FUN",     clue: "What a good game should be" },
+  { num: 4, dir: "across", row: 3, col: 0, len: 7, word: "PUZZLES", clue: "Games like this one" },
+  { num: 5, dir: "across", row: 5, col: 2, len: 3, word: "INN",     clue: "Roadside place to stay the night" },
+];
+
+let userGrid = [];
+
+function initUserGrid() {
+  userGrid = SOLUTION.map(row => row.map(cell => cell === null ? null : ""));
+}
+
+function cellNumber(r, c) {
+  const e = ENTRIES.find(e => e.row === r && e.col === c);
+  return e ? e.num : null;
+}
+
+function renderGrid() {
+  const gridEl = document.getElementById("grid");
+  gridEl.innerHTML = "";
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const square = document.createElement("div");
+      square.className = "square";
+      if (SOLUTION[r][c] === null) {
+        square.classList.add("block");
+      } else {
+        const num = cellNumber(r, c);
+        if (num) {
+          const label = document.createElement("span");
+          label.className = "clue-number";
+          label.textContent = num;
+          square.appendChild(label);
+        }
+        const input = document.createElement("input");
+        input.maxLength = 1;
+        input.dataset.row = r;
+        input.dataset.col = c;
+        input.autocomplete = "off";
+        input.value = userGrid[r][c] || "";
+        input.addEventListener("input", onLetterInput);
+        input.addEventListener("keydown", onKeyNav);
+        square.appendChild(input);
+      }
+      gridEl.appendChild(square);
+    }
+  }
+}
+
+function onLetterInput(e) {
+  const el = e.target;
+  const letter = el.value.replace(/[^a-zA-Z]/g, "").slice(-1).toUpperCase();
+  el.value = letter;
+  const r = parseInt(el.dataset.row), c = parseInt(el.dataset.col);
+  userGrid[r][c] = letter;
+  el.classList.remove("error");
+  setStatus("", "");
+  if (letter) focusCell(r, c + 1) || focusCell(r + 1, c, true);
+}
+
+function onKeyNav(e) {
+  const r = parseInt(e.target.dataset.row), c = parseInt(e.target.dataset.col);
+  if (e.key === "ArrowRight") focusCell(r, c + 1);
+  else if (e.key === "ArrowLeft") focusCell(r, c - 1);
+  else if (e.key === "ArrowDown") focusCell(r + 1, c);
+  else if (e.key === "ArrowUp") focusCell(r - 1, c);
+  else if (e.key === "Backspace" && !e.target.value) focusCell(r, c - 1);
+}
+
+function focusCell(r, c) {
+  if (r < 0 || c < 0 || r >= ROWS || c >= COLS || SOLUTION[r][c] === null) return false;
+  const input = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`);
+  if (input) { input.focus(); return true; }
+  return false;
+}
+
+function setStatus(text, cls) {
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "status" + (cls ? " " + cls : "");
+}
+
+function renderClues() {
+  const acrossEl = document.getElementById("acrossClues");
+  const downEl = document.getElementById("downClues");
+  acrossEl.innerHTML = "";
+  downEl.innerHTML = "";
+  ENTRIES.forEach(e => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="num">${e.num}.</span>${e.clue}`;
+    (e.dir === "across" ? acrossEl : downEl).appendChild(li);
+  });
+}
+
+function checkGrid() {
+  document.querySelectorAll(".square input").forEach(i => i.classList.remove("error"));
+  let hasError = false, isFull = true;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (SOLUTION[r][c] === null) continue;
+      const val = userGrid[r][c];
+      if (!val) { isFull = false; continue; }
+      if (val !== SOLUTION[r][c]) {
+        hasError = true;
+        const input = document.querySelector(`input[data-row="${r}"][data-col="${c}"]`);
+        if (input) input.classList.add("error");
+      }
+    }
+  }
+
+  if (hasError) setStatus("A few letters don't fit — check the highlighted squares.", "error");
+  else if (!isFull) setStatus("Looking good so far — keep going.", "");
+  else setStatus("Solved. Well played.", "win");
+}
+
+function revealSolution() {
+  userGrid = SOLUTION.map(row => row.map(cell => cell === null ? null : cell));
+  renderGrid();
+  setStatus("Here is the solution.", "");
+}
+
+function resetGrid() {
+  initUserGrid();
+  renderGrid();
+  setStatus("", "");
+}
+
+document.getElementById("checkBtn").addEventListener("click", checkGrid);
+document.getElementById("solveBtn").addEventListener("click", revealSolution);
+document.getElementById("resetBtn").addEventListener("click", resetGrid);
+
+initUserGrid();
+renderGrid();
+renderClues();
+</script>
+
+</body>
+</html>
